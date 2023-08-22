@@ -25,10 +25,21 @@ var userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
-    isAdmin:{
+    role:{
         type:String,
-        default:false,
+        default:'user',
     },
+    cart:{
+        type: Array,
+        default: [],
+    },
+    address: [{type: mongoose.Schema.Types.ObjectId, ref: "Address"}],
+    refreshToken: {
+        type: String,
+    },     
+},
+{
+    timestamps: true,
 });
 
 // encrypt password using bcrypt
