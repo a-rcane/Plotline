@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createItem } = require('../controller/itemController');
+const { createItem, getAllItems } = require('../controller/itemController');
+const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 
-router.post('/add', createItem);
+router.get('/all', getAllItems);
+router.post('/add', authMiddleware, isAdmin, createItem);
 
 module.exports = router;

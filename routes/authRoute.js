@@ -8,14 +8,13 @@ router.post('/register', createUser);
 router.post('/login', loginUser);
 router.get('/refresh', handleRefreshToken);
 router.get('/logout', logout);
-router.get('/:id', authMiddleware, isAdmin, getUser);
 router.put('/update', authMiddleware, updateUser);
 router.delete('/delete', authMiddleware, deleteUser);
 
 // cart
 router.post('/cart', authMiddleware, userCart);
-router.get('/cart/user', authMiddleware, getUserCart);
-router.post('/cart/delete', authMiddleware, emptyCart);
+router.get('/cart/total', authMiddleware, getUserCart);
+router.delete('/cart', authMiddleware, emptyCart);
 
 module.exports = router;
 

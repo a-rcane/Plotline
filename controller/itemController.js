@@ -12,7 +12,6 @@ const createItem = asyncHandler(async (req, res) => {
                 slug: slugify(req.body.name),
                 type: req.body.type,
                 price: req.body.price, 
-                totalCost: req.body.price + values.price,
             });
         res.json(newItem);
     } catch (error) {
@@ -20,5 +19,15 @@ const createItem = asyncHandler(async (req, res) => {
     }
 });
 
+// get all items (products and service)
+const getAllItems = asyncHandler(async (req, res) => {
+    const category = req.query.category;
+    try {
+        const allItems = await Item.find({ type: category }).select('name price type slug');
+        res.json(allItems);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
 
-module.exports = { createItem };
+module.exports = { createItem, getAllItems };

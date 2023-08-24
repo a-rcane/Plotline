@@ -194,6 +194,7 @@ const userCart = asyncHandler(async (req, res) => {
             const values = calculateTax(object.price, object.type);
             object.tax = values.taxes;
             object.taxCost = values.price;
+            object.totalItemCost = (values.price + getPrice.price)*cart[i].quantity;
             items.push(object);
         }
         let totalCost = 0;
@@ -211,11 +212,12 @@ const userCart = asyncHandler(async (req, res) => {
     }
 });
 
+// get user cart
 const getUserCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     validateMongoDbId(_id);
     try {
-      const cart = await Cart.findOne({ orderby: _id }).populate(
+      const cart = await Cart.findOne({ orderBy: _id }).populate(
         "items.item"
       );
       res.json(cart);
@@ -224,13 +226,16 @@ const getUserCart = asyncHandler(async (req, res) => {
     }
   });
   
+// empty user cart
 const emptyCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     validateMongoDbId(_id);
     try {
       const user = await User.findOne({ _id });
-      const cart = await Cart.findOneAndRemove({ orderby: user._id });
-      res.json(cart);
+      const cart = await Cart.findOneAndRemove({ orderBy: user._id });
+      res.json({
+        message: 'Cart emptied successfully.'
+      });
     } catch (error) {
       throw new Error(error);
     }

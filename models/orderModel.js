@@ -11,10 +11,9 @@ var orderSchema = new mongoose.Schema({
             type: Array,
             default: [],
         },
-        type:{ type:String},
-        price:Number,
         quantity:Number,
         taxCost:Number,
+        totalItemCost:Number
     },
     ],
     totalCost:Number,

@@ -7,14 +7,13 @@ var cartSchema = new mongoose.Schema({
             type:mongoose.Schema.Types.ObjectId,
             ref: 'Item',
         },
-        price:Number,
-        quantity:Number,
-        type:{ type:String},
         tax:{
             type: Array,
             default: [],
         },
         taxCost:Number,
+        quantity:Number,
+        totalItemCost:Number
     },
     ],
     totalCost:Number,
