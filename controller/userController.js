@@ -1,9 +1,46 @@
 const { generateToken } = require('../config/jwtToken');
 const User = require('../models/userModel');
+const Item = require('../models/itemModel');
+const Cart = require('../models/cartModel');
 const asyncHandler = require('express-async-handler')
 const { generateRefreshToken } = require('../config/refreshToken');
 const jwt = require('jsonwebtoken');
 const validateMongoDbId = require('../utils/validateMongoDbId');
+
+function calculateTax(num, itemType) {
+    
+    let taxes = [], price = 0;
+    
+    if(itemType=="Service") {
+        // service
+        if(num>1000 && num<=8000){
+            taxes.push('SA');
+            price += 0.1*num;
+        }
+        else if(num>8000)
+        {
+            taxes.push('SB');
+            price += 0.15*num;    
+        }
+        taxes.push('SC');
+        price += 100;
+    } else if(itemType=="Product"){
+        // product
+        if(num>1000 && num<=5000){
+            taxes.push('PA');
+            price += 0.12*num;
+
+        } 
+        else if(num>5000) {
+            taxes.push('PB');
+            price += 0.18*num;    
+        }
+        taxes.push('PC');
+        price += 200;
+    }
+
+    return {price, taxes};
+}
 
 // create new user
 const createUser = asyncHandler(async (req, res) => {
@@ -134,4 +171,80 @@ const logout = asyncHandler(async (req, res) => {
     res.sendStatus(204);
 });
 
-module.exports = { createUser, loginUser , deleteUser, updateUser, getUser, handleRefreshToken, logout};
+// user cart
+const userCart = asyncHandler(async (req, res) => {
+    const {cart} = req.body;
+    const {_id} = req.user;
+    validateMongoDbId(_id);
+    try {
+        const user = await User.findById(_id);
+        const existingCart = await Cart.findOne({ orderby: user._id });
+        let items = [];
+        if(existingCart) existingCart.remove(); 
+
+        for(let i=0;i<cart.length;i++)
+        {
+            let object = {};
+            object.item = cart[i]._id;
+            let getPrice = await Item.findById(cart[i]._id).select('price').exec();
+            object.price = getPrice.price; 
+            object.quantity = cart[i].quantity;
+            let getType = await Item.findById(cart[i]._id).select('type').exec();
+            object.type = getType.type;
+            const values = calculateTax(object.price, object.type);
+            object.tax = values.taxes;
+            object.taxCost = values.price;
+            items.push(object);
+        }
+        let totalCost = 0;
+        for(let i=0;i<items.length;i++)
+            totalCost += (items[i].taxCost + items[i].price)*items[i].quantity;
+            
+        let newCart = await new Cart({
+            items,
+            totalCost,
+            orderBy: user?._id,
+        }).save();
+        res.json(newCart);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const getUserCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    try {
+      const cart = await Cart.findOne({ orderby: _id }).populate(
+        "items.item"
+      );
+      res.json(cart);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+  
+const emptyCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    try {
+      const user = await User.findOne({ _id });
+      const cart = await Cart.findOneAndRemove({ orderby: user._id });
+      res.json(cart);
+    } catch (error) {
+      throw new Error(error);
+    }
+});
+
+module.exports = { 
+    createUser, 
+    loginUser, 
+    deleteUser, 
+    updateUser, 
+    getUser, 
+    handleRefreshToken, 
+    logout,
+    userCart,
+    getUserCart,
+    emptyCart,
+};

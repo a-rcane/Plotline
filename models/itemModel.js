@@ -21,15 +21,9 @@ var itemSchema = new mongoose.Schema({
         type:Number,
         required:true,
     },
-    // tax:{
-    //     type:Array,
-    //     default:[],
-    // },
-    // taxCost:Number,
-    // totalCost:Number,
 },
 {timestamps: true},
 );
 
 //Export the model
-module.exports = mongoose.model('Items', itemSchema);
+module.exports = mongoose.model('Item', itemSchema);
