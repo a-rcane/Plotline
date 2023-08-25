@@ -17,12 +17,12 @@ var orderSchema = new mongoose.Schema({
     },
     ],
     totalCost:Number,
-    paymentStatus:{
+    orderStatus:{
         type:String,
         default:'Pending',
         enum: [
             'Pending',
-            'Ordered'
+            'Confirmed'
         ],
     },
     orderBy:{
@@ -34,4 +34,4 @@ var orderSchema = new mongoose.Schema({
 );
 
 //Export the model
-module.exports = mongoose.model('User', orderSchema);
+module.exports = mongoose.model('Order', orderSchema);

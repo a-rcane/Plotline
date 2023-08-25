@@ -16,6 +16,10 @@ var itemSchema = new mongoose.Schema({
     type:{
         type:String,
         required:true,
+        enum: [
+            'Service',
+            'Product'
+        ]
     },
     price:{
         type:Number,

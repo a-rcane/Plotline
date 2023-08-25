@@ -2,7 +2,8 @@ const { generateToken } = require('../config/jwtToken');
 const User = require('../models/userModel');
 const Item = require('../models/itemModel');
 const Cart = require('../models/cartModel');
-const asyncHandler = require('express-async-handler')
+const Order = require('../models/orderModel');
+const asyncHandler = require('express-async-handler');
 const { generateRefreshToken } = require('../config/refreshToken');
 const jwt = require('jsonwebtoken');
 const validateMongoDbId = require('../utils/validateMongoDbId');
@@ -241,6 +242,79 @@ const emptyCart = asyncHandler(async (req, res) => {
     }
 });
 
+// create order 
+const createOrder = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    try {
+        const user = await User.findById(_id);
+        let userCart = await Cart.findOne({ orderBy: user._id });
+                
+        if(!userCart) res.json({
+            message: "Cart is empty."
+        });
+        
+        let totalCost = 0;
+        for(let i=0;i<userCart.items.length;i++)
+            totalCost += userCart.items[i].totalItemCost;
+
+        let newOrder = await new Order({
+            items: userCart.items,
+            totalCost,
+            orderStatus: "Pending",
+            orderBy: user?._id,
+        }).save();
+        
+        res.json(newOrder);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+// get all orders
+const getAllOrders = asyncHandler(async (req, res) => {
+    try {
+      const alluserorders = await Order.find()
+        .populate("items.item")
+        .exec();
+      res.json(alluserorders);
+    } catch (error) {
+      throw new Error(error);
+    }
+});
+
+// get user order
+const getUserOrder = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    try {
+      const userOrder = await Order.findOne({ orderBy: _id })
+        .populate("items.item")
+        .exec();
+      res.json(userOrder);
+    } catch (error) {
+      throw new Error(error);
+    }
+});
+
+// confirm order
+const confirmOrder = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    validateMongoDbId(id);
+    try {
+      const updateOrderStatus = await Order.findByIdAndUpdate(
+        id,
+        {
+          orderStatus: 'Confirmed',
+        },
+        { new: true }
+      );
+      res.json(updateOrderStatus);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+
 module.exports = { 
     createUser, 
     loginUser, 
@@ -252,4 +326,8 @@ module.exports = {
     userCart,
     getUserCart,
     emptyCart,
+    createOrder,
+    getAllOrders,
+    getUserOrder,
+    confirmOrder
 };
