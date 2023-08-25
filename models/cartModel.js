@@ -11,6 +11,7 @@ var cartSchema = new mongoose.Schema({
             type: Array,
             default: [],
         },
+        price:Number,
         taxCost:Number,
         quantity:Number,
         totalItemCost:Number

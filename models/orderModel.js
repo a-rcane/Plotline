@@ -11,6 +11,7 @@ var orderSchema = new mongoose.Schema({
             type: Array,
             default: [],
         },
+        price:Number,
         quantity:Number,
         taxCost:Number,
         totalItemCost:Number
