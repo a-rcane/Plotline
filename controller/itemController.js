@@ -23,6 +23,10 @@ const createItem = asyncHandler(async (req, res) => {
 const getAllItems = asyncHandler(async (req, res) => {
     const category = req.query.category;
     try {
+        if(category === undefined) {
+            const allItems = await Item.find();
+            res.json(allItems);
+        }
         const allItems = await Item.find({ type: category }).select('name price type slug');
         res.json(allItems);
     } catch (error) {

@@ -457,14 +457,26 @@ const confirmOrder = asyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongoDbId(id);
     try {
-      const updateOrderStatus = await Order.findByIdAndUpdate(
+        const currentOrder = await Order.findById(id);
+        if(!currentOrder) res.json({
+            message: 'Unable to confirm order.'
+        });
+
+        if(currentOrder.orderStatus == 'Confirmed') res.json({
+            message: 'Order already confirmed.',
+        });
+        
+        const updateOrderStatus = await Order.findByIdAndUpdate(
         id,
         {
           orderStatus: 'Confirmed',
         },
         { new: true }
       );
-      res.json(updateOrderStatus);
+      res.json({
+        updateOrderStatus, 
+        message: 'Order was successfully confirmed.',
+      });
     } catch (error) {
       throw new Error(error);
     }
