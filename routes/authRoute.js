@@ -12,7 +12,8 @@ const {
     getAllOrders, 
     getUserOrder, 
     confirmOrder, 
-    addToCart} = require('../controller/userController');
+    addToCart,
+    removeFromCart} = require('../controller/userController');
 const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
@@ -28,7 +29,8 @@ router.delete('/delete', authMiddleware, deleteUser);
 router.post('/cart', authMiddleware, userCart);
 router.get('/cart/total', authMiddleware, getUserCart);
 router.delete('/cart', authMiddleware, emptyCart);
-router.put('/cart/add', authMiddleware, addToCart);
+router.post('/cart/add', authMiddleware, addToCart);
+router.post('/cart/remove', authMiddleware, removeFromCart);
 
 // order
 router.post('/order', authMiddleware, createOrder);

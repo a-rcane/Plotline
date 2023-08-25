@@ -231,7 +231,7 @@ const getUserCart = asyncHandler(async (req, res) => {
 const addToCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     validateMongoDbId(_id);
-    const { item_id, quantity } = req.query;
+    let { item_id, quantity } = req.query;
 
     try {
 
@@ -243,8 +243,13 @@ const addToCart = asyncHandler(async (req, res) => {
             message: 'Item not found',
         });
 
+        // if no quantity mentioned then simply add 1 item
+        if(quantity === undefined) quantity = 1;
+
         const user = await User.findById(_id);
         let userCart = await Cart.findOne({ orderBy: user._id });
+
+        if(quantity === 0) res.json(userCart);
 
         // cart doesn't exist so create a new cart with item
         if(!userCart) {
@@ -318,7 +323,64 @@ const addToCart = asyncHandler(async (req, res) => {
 });
 
 // remove from cart
+const removeFromCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    let { item_id, quantity } = req.query;
 
+    try {
+        let obj = {};
+        obj.item = item_id;
+        let getPrice = await Item.findById(item_id).select('price').exec();
+        
+        if(!getPrice) res.json({
+            message: 'Item not found',
+        });
+
+        const user = await User.findById(_id);
+        let userCart = await Cart.findOne({ orderBy: user._id });
+
+        if(quantity === 0) res.json(userCart);
+
+        // cart doesn't exist don't remove anything
+        if(!userCart) res.json({
+            message: 'No items to remove.',
+        });
+
+        let flag = 0;
+        // item exists in cart so update item
+        for(let i=0;i<userCart.items.length;i++)
+        {
+            if(userCart.items[i].item == item_id)
+            {
+                flag = 1;
+                // if no quantity mentioned then simply remove all items
+                if(quantity === undefined || userCart.items[i].quantity <= quantity) 
+                {
+                    userCart.totalCost = userCart.totalCost - userCart.items[i].totalItemCost;
+                    userCart.items.splice(i,1);
+                    break;
+                } else {
+                    userCart.items[i].quantity = parseInt(userCart.items[i].quantity)-parseInt(quantity);
+                    const temp = parseInt(userCart.items[i].price) + parseInt(userCart.items[i].taxCost);
+                    userCart.items[i].totalItemCost = parseInt(userCart.items[i].totalItemCost)- temp*quantity; 
+                    userCart.totalCost = parseInt(userCart.totalCost) - temp*quantity;
+                    break;
+                }
+            }
+        }
+
+        if(!flag) res.json({
+            message: 'Item not present in cart.',
+        })
+
+        userCart.save();
+        res.json(userCart);
+
+    } catch (error) {
+        throw new Error(error);
+    }
+});
 
 // empty user cart
 const emptyCart = asyncHandler(async (req, res) => {
@@ -423,5 +485,6 @@ module.exports = {
     getAllOrders,
     getUserOrder,
     confirmOrder,
-    addToCart
+    addToCart,
+    removeFromCart
 };
