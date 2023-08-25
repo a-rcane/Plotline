@@ -10,10 +10,23 @@ Plotline backend assignment - Sanchit Varma
 
 base_url :  `localhost:5000/api`
 
+*Added the .env file for the required credentials.*
+
 ## Tech Stack
 
 1. Mongodb - NoSql database
 2. Nodejs with Express
+
+## Postman
+
+Postman used for testing the APIs. Used 2 environment variable :
+
+1. base : `localhost:5000/api`
+2. token : `JWT token`
+
+Postman collection : 
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/18653491-12f83e3f-1bd4-4f4a-9939-ad09ae6b73c3?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D18653491-12f83e3f-1bd4-4f4a-9939-ad09ae6b73c3%26entityType%3Dcollection%26workspaceId%3D1d42f86c-4728-4520-9a9c-659a5bf3606c)
 
 ## Schemas
 
