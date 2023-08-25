@@ -225,8 +225,101 @@ const getUserCart = asyncHandler(async (req, res) => {
     } catch (error) {
       throw new Error(error);
     }
-  });
+});
   
+// add to cart
+const addToCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    const { item_id, quantity } = req.query;
+
+    try {
+
+        let obj = {};
+        obj.item = item_id;
+        let getPrice = await Item.findById(item_id).select('price').exec();
+        
+        if(!getPrice) res.json({
+            message: 'Item not found',
+        });
+
+        const user = await User.findById(_id);
+        let userCart = await Cart.findOne({ orderBy: user._id });
+
+        // cart doesn't exist so create a new cart with item
+        if(!userCart) {
+            let object = {}, items = [];
+
+            object.item = item_id;
+            let getPrice = await Item.findById(item_id).select('price').exec();
+            object.price = getPrice.price; 
+            object.quantity = quantity;
+            let getType = await Item.findById(item_id).select('type').exec();
+            object.type = getType.type;
+            const values = calculateTax(getPrice.price, getType.type);
+            object.tax = values.taxes;
+            object.taxCost = values.price;
+            object.totalItemCost = (values.price + getPrice.price)*quantity;
+            items.push(object);
+
+            totalCost = (values.price + getPrice.price)*quantity;
+
+            let newCart = await Cart({
+                items,
+                totalCost,
+                orderBy: user?._id
+            }).save();
+        
+            res.json(newCart);
+        }
+
+        // item exists in cart so update item
+        let flag = 0;
+        for(let i=0;i<userCart.items.length;i++)
+        {
+            if(userCart.items[i].item == item_id)
+            {
+                flag = 1;
+                userCart.items[i].quantity = parseInt(userCart.items[i].quantity)+parseInt(quantity);
+                const temp = parseInt(userCart.items[i].price) + parseInt(userCart.items[i].taxCost);
+                userCart.items[i].totalItemCost = parseInt(userCart.items[i].totalItemCost)+ temp*quantity; 
+                userCart.totalCost = parseInt(userCart.totalCost) + temp*quantity;
+                userCart.save();
+                res.json(userCart);
+            }
+        }
+
+        // item doesn't exist in cart so add item
+        if(!flag)
+        {
+            let object = {}, items = [];
+           
+            object.item = item_id;
+            let getPrice = await Item.findById(item_id).select('price').exec();
+            object.price = getPrice.price; 
+            object.quantity = quantity;
+            let getType = await Item.findById(item_id).select('type').exec();
+            object.type = getType.type;
+            const values = calculateTax(getPrice.price, getType.type);
+            object.tax = values.taxes;
+            object.taxCost = values.price;
+            object.totalItemCost = (values.price + getPrice.price)*quantity;
+            userCart.items.push(object);
+
+            userCart.totalCost = parseInt(userCart.totalCost) + parseInt(object.totalItemCost);
+
+            userCart.save();
+        
+            res.json(userCart);            
+        }
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+// remove from cart
+
+
 // empty user cart
 const emptyCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
@@ -313,7 +406,7 @@ const confirmOrder = asyncHandler(async (req, res) => {
     } catch (error) {
       throw new Error(error);
     }
-  });
+});
 
 module.exports = { 
     createUser, 
@@ -329,5 +422,6 @@ module.exports = {
     createOrder,
     getAllOrders,
     getUserOrder,
-    confirmOrder
+    confirmOrder,
+    addToCart
 };
