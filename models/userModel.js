@@ -27,13 +27,12 @@ var userSchema = new mongoose.Schema({
     },
     role:{
         type:String,
-        default:'user',
+        default:'User',
+        enum: [
+            'User',
+            'Admin'
+        ]
     },
-    cart:{
-        type: Array,
-        default: [],
-    },
-    address: [{type: mongoose.Schema.Types.ObjectId, ref: "Address"}],
     refreshToken: {
         type: String,
     },     
